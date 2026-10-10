@@ -1,0 +1,32 @@
+name: cek-disk
+on: workflow_dispatch
+jobs:
+  cek:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 20
+    steps:
+      - name: Spesifikasi awal
+        run: |
+          echo "CPU: $(nproc)"
+          free -h
+          df -h
+          lsblk
+      - name: Bebaskan ruang
+        run: |
+          sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/lib/android /usr/local/share/boost /opt/hostedtoolcache /usr/local/.ghcup /usr/share/swift || true
+          sudo apt-get clean
+          df -h
+      - name: Uji kecepatan unduh source Android
+        run: |
+          START=$(date +%s)
+          git clone --depth=1 https://android.googlesource.com/platform/frameworks/base /tmp/fw
+          END=$(date +%s)
+          SIZE=$(du -sm /tmp/fw | cut -f1)
+          echo "UNDUH: ${SIZE} MB dalam $((END-START)) detik"
+      - name: Ringkasan
+        run: |
+          CPU=$(nproc)
+          RAM=$(free -g | awk '/Mem:/ {print $2}')
+          ROOT=$(df -BG --output=avail / | tail -1 | tr -dc '0-9')
+          MNT=$(df -BG --output=avail /mnt | tail -1 | tr -dc '0-9')
+          echo "HASIL cpu=${CPU} ram=${RAM}GB bebas_root=${ROOT}GB bebas_mnt=${MNT}GB"
